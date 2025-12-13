@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ResumeFox AI — Prototype</title>
+  <style>
+    :root{
+      --bg:#ffffff;
+      --muted:#6b7280;
+      --accent:#ff914d;
+      --btn-bg:#e6f0ff;
+      --success:#16a34a;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+    }
+
+    body{
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:linear-gradient(180deg,#fff,#fbfbff);
+      padding:32px;
+    }
+
+    .card{
+      width:100%;
+      max-width:900px;
+      background:var(--bg);
+      border-radius:16px;
+      box-shadow:0 6px 24px rgba(16,24,40,0.06);
+      padding:48px;
+      text-align:center;
+    }
+
+    h1{ margin:0; font-size:34px; }
+    .subtitle{ color:var(--muted); margin-bottom:28px; }
+
+    /* Vertical upload layout */
+    .upload-col{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:center;
+      margin-bottom:22px;
+    }
+
+    .btn{
+      padding:14px 22px;
+      border-radius:999px;
+      font-weight:600;
+      cursor:pointer;
+      border:0;
+    }
+    .btn-upload{
+      background:var(--btn-bg);
+      border:1px solid rgba(0,0,0,0.04);
+      min-width:260px;
+    }
+    .btn-cta{
+      background:var(--accent);
+      color:white;
+      min-width:240px;
+      margin-top:14px;
+    }
+
+    input[type="file"]{ display:none; }
+
+    /* file status under button */
+    .file-status{
+      font-size:14px;
+      color:var(--muted);
+      margin-top:-8px;
+      margin-bottom:8px;
+    }
+    .uploaded{ color:#0f172a; font-weight:600; }
+
+    /* Processing */
+    .processing{
+      display:none;
+      margin-top:24px;
+      flex-direction:column;
+      align-items:center;
+      gap:10px;
+    }
+    .spinner{
+      width:48px;height:48px;border-radius:50%;
+      border:5px solid #eee;border-top-color:var(--accent);
+      animation:spin 1s linear infinite;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+
+    /* Results — vertical layout */
+    .results{
+      display:none;
+      margin-top:32px;
+      text-align:center;
+    }
+    .score{
+      text-align:center;
+      font-size:26px;
+      font-weight:700;
+      color:#2563eb;
+      margin-bottom:20px;
+    }
+
+    .section-title{ font-weight:700; margin-top:20px; margin-bottom:6px; text-align:center; }
+    ul{ margin:0 auto; padding-left:20px; color:var(--muted); display:inline-block; text-align:left; }
+
+    .action-pill{
+      display:inline-block;
+      padding:10px 16px;
+      background:var(--success);
+      color:white;
+      border-radius:999px;
+      margin-top:10px;
+      font-weight:700;
+    }
+
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>ResumeFox AI 🦊</h1>
+    <div class="subtitle">Smart Resume-to-Job Matching Tool</div>
+
+    <!-- UPLOAD SECTION (VERTICAL) -->
+    <div class="upload-col">
+
+      <!-- Resume -->
+      <label class="btn btn-upload">
+        <input id="fileResume" type="file" accept=".txt" />
+        Upload Resume
+      </label>
+      <div id="resumeStatus" class="file-status">No resume uploaded</div>
+
+      <!-- JD -->
+      <label class="btn btn-upload">
+        <input id="fileJD" type="file" accept=".txt" />
+        Upload Job Description
+      </label>
+      <div id="jdStatus" class="file-status">No job description uploaded</div>
+
+    </div>
+
+    <button id="analyzeBtn" class="btn btn-cta">Analyze Match</button>
+
+    <!-- Processing -->
+    <div id="processing" class="processing">
+      <div class="spinner"></div>
+      <div style="font-weight:700">Analyzing Resume…</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div id="results" class="results">
+      
+      <div class="score" id="scoreText">Match Score: — / 100</div>
+
+      <!-- Strengths FIRST -->
+      <div class="section-title">Strengths</div>
+      <ul id="strengthsList"><li>—</li></ul>
+
+      <!-- Weaknesses BELOW -->
+      <div class="section-title">Weaknesses</div>
+      <ul id="weaknessesList"><li>—</li></ul>
+
+      <div style="text-align:center">
+        <div class="section-title" style="margin-top:22px;">Recommended Action</div>
+        <div id="actionPill" class="action-pill">—</div>
+      </div>
+
+      <div style="text-align:center;margin-top:18px">
+        <button id="again" class="btn btn-upload">Analyze Another</button>
+      </div>
+
+    </div>
+
+  </div><!-- card End -->
+
+
+<script>
+  const fileResume = document.getElementById("fileResume");
+  const fileJD = document.getElementById("fileJD");
+
+  const resumeStatus = document.getElementById("resumeStatus");
+  const jdStatus = document.getElementById("jdStatus");
+
+  let resumeText = "";
+  let jdText = "";
+
+  function readFileAsText(file){
+    return new Promise((resolve)=>{
+      const reader = new FileReader();
+      reader.onload = ()=>resolve(reader.result);
+      reader.onerror = ()=>resolve("");
+      reader.readAsText(file);
+    });
+  }
+
+  fileResume.addEventListener("change", async(e)=>{
+    const f = e.target.files[0];
+    if(f){
+      resumeText = await readFileAsText(f);
+      resumeStatus.textContent = "Uploaded: " + f.name;
+      resumeStatus.classList.add("uploaded");
+    }
+  });
+
+  fileJD.addEventListener("change", async(e)=>{
+    const f = e.target.files[0];
+    if(f){
+      jdText = await readFileAsText(f);
+      jdStatus.textContent = "Uploaded: " + f.name;
+      jdStatus.classList.add("uploaded");
+    }
+  });
+
+  const processing = document.getElementById("processing");
+  const results = document.getElementById("results");
+  const analyzeBtn = document.getElementById("analyzeBtn");
+
+  analyzeBtn.addEventListener("click", async()=>{
+
+    if(!resumeText || !jdText){
+      alert("Please upload both Resume and Job Description.");
+      return;
+    }
+
+    processing.style.display="flex";
+    results.style.display="none";
+
+    await new Promise(r=>setTimeout(r,1200));
+
+    const output = simulatedAnalysis(resumeText, jdText);
+    showResults(output);
+  });
+
+  function simulatedAnalysis(resume, jd){
+    const score = Math.floor(70 + Math.random()*20);
+    return {
+      score,
+      strengths:["Python","Django","SQL"],
+      weaknesses:["No cloud experience"],
+      recommended_action: score>75 ? "Interview" : "Maybe"
+    };
+  }
+
+  function showResults(o){
+    processing.style.display="none";
+    results.style.display="block";
+
+    document.getElementById("scoreText").textContent = `Match Score: ${o.score} / 100`;
+
+    const s = document.getElementById("strengthsList");
+    const w = document.getElementById("weaknessesList");
+
+    s.innerHTML = "";
+    w.innerHTML = "";
+
+    o.strengths.forEach(x=>{
+      let li=document.createElement("li");
+      li.textContent=x;
+      s.appendChild(li);
+    });
+
+    o.weaknesses.forEach(x=>{
+      let li=document.createElement("li");
+      li.textContent=x;
+      w.appendChild(li);
+    });
+
+    const pill = document.getElementById("actionPill");
+    pill.textContent = o.recommended_action;
+    pill.style.background = o.recommended_action==="Interview" ? "#16a34a" : "#f59e0b";
+  }
+
+  document.getElementById("again").addEventListener("click",()=>{
+    results.style.display="none";
+    resumeText = "";
+    jdText = "";
+    fileResume.value = "";
+    fileJD.value = "";
+    resumeStatus.textContent = "No resume uploaded";
+    jdStatus.textContent = "No job description uploaded";
+    resumeStatus.classList.remove("uploaded");
+    jdStatus.classList.remove("uploaded");
+  });
+</script>
+
+</body>
+</html>
