@@ -280,8 +280,8 @@
         // Extract safe values
         showResults({
           score: data.score || 0,
-          strengths: data.strengths || [],
-          weaknesses: data.weaknesses || [],
+          strengths: [data.strengths],
+          weaknesses: [data.weaknesses],
           recommended_action: data.recommended_action || "Review"
         });
 
@@ -335,3 +335,4 @@
   </script>
 </body>
 </html>
+
