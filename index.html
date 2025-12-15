@@ -276,14 +276,41 @@
 
         const data = await response.json();
         console.log("AI RESPONSE:", data);
+        
 
-        // Extract safe values
-        showResults({
-          score: data.score || 0,
-          strengths: [data.strengths],
-          weaknesses: [data.weaknesses],
-          recommended_action: data.recommended_action || "Review"
-        });
+      // Extract safe values
+      const text = data.candidates[0].content.parts[0].text;
+
+      // Extract score
+      const scoreMatch = text.match(/SCORE:\s*(\d+)/);
+      const score = scoreMatch ? Number(scoreMatch[1]) : 0;
+
+      // Extract strengths
+      const strengthsBlock = text.split("STRENGTHS:")[1]?.split("WEAKNESSES:")[0] || "";
+      const strengths = strengthsBlock
+        .split("\n")
+        .filter(l => l.trim().startsWith("-"))
+        .map(l => l.replace("-", "").trim());
+
+      // Extract weaknesses
+      const weaknessesBlock = text.split("WEAKNESSES:")[1]?.split("ACTION:")[0] || "";
+      const weaknesses = weaknessesBlock
+        .split("\n")
+        .filter(l => l.trim().startsWith("-"))
+        .map(l => l.replace("-", "").trim());
+
+      // Extract action
+      const actionMatch = text.match(/ACTION:\s*(Interview|Review)/i);
+      const action = actionMatch ? actionMatch[1] : "Review";
+
+      showResults({
+        score,
+        strengths,
+        weaknesses,
+        recommended_action: action
+    });
+  
+
 
       } catch (err) {
         console.error(err);
@@ -335,4 +362,5 @@
   </script>
 </body>
 </html>
+
 
