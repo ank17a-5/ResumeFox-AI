@@ -241,17 +241,10 @@
       );
 
       const data = await res.json();
-      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-
-      let score = 0, strengths=[], weaknesses=[], action="Review";
-
-      try{
-        const json = JSON.parse(text.replace(/```json|```/g,""));
-        score = json.score || 0;
-        strengths = json.strengths || [];
-        weaknesses = json.weaknesses || [];
-        action = json.recommended_action || "Review";
-      }catch{}
+      const score = data.score || 0;
+      const strengths = data.strengths || [];
+      const weaknesses = data.weaknesses || [];
+      const action = data.recommended_action || "Review";
 
       document.getElementById("scoreText").textContent = `Match Score: ${score} / 100`;
 
@@ -284,3 +277,4 @@
 
 </body>
 </html>
+
