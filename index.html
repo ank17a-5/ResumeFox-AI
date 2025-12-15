@@ -12,224 +12,274 @@
       --accent:#ff914d;
       --btn-bg:#e6f0ff;
       --success:#16a34a;
-      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+      --warning:#f59e0b;
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial;
     }
 
     body{
       margin:0;
       min-height:100vh;
       display:flex;
-      align-items:center;
       justify-content:center;
-      background:#f9fafb;
-      padding:32px;
+      align-items:center;
+      background:#f8fafc;
+      padding:24px;
     }
 
     .card{
       width:100%;
-      max-width:800px;
-      background:white;
+      max-width:900px;
+      background:#fff;
       border-radius:16px;
-      padding:48px;
-      box-shadow:0 6px 24px rgba(0,0,0,.08);
+      box-shadow:0 6px 24px rgba(0,0,0,0.06);
+      padding:40px;
       text-align:center;
     }
 
-    h1{margin-bottom:4px}
-    .subtitle{color:var(--muted);margin-bottom:28px}
+    h1{ margin:0; font-size:34px; }
+    .subtitle{ color:var(--muted); margin:10px 0 30px; }
 
     .btn{
-      padding:14px 22px;
-      border-radius:999px;
       border:0;
+      border-radius:999px;
+      padding:14px 24px;
       cursor:pointer;
       font-weight:600;
-      font-size:14px;
+      min-width:220px;
     }
 
-    .btn-upload{
-      background:var(--btn-bg);
-      margin-bottom:8px;
+    .btn-upload{ background:var(--btn-bg); }
+    .btn-cta{ background:var(--accent); color:white; }
+
+    input[type="file"]{ display:none; }
+
+    .small{ color:var(--muted); font-size:13px; margin-top:6px; }
+
+    .upload-row{
+      display:flex;
+      flex-direction:column;
+      gap:16px;
+      align-items:center;
     }
 
-    .btn-cta{
-      background:var(--accent);
-      color:white;
-      margin-top:12px;
+    .processing,
+    .results{
+      display:none;
+      width:100%;
+      margin-top:30px;
     }
 
-    input[type=file]{display:none}
-    .small{font-size:13px;color:var(--muted)}
+    .spinner{
+      width:48px;
+      height:48px;
+      border-radius:50%;
+      border:5px solid #eee;
+      border-top-color:var(--accent);
+      animation:spin 1s linear infinite;
+      margin:auto;
+    }
 
-    .processing{display:none;margin-top:24px}
-    .results{display:none;margin-top:32px;text-align:left}
+    @keyframes spin{
+      to{ transform:rotate(360deg); }
+    }
 
     .score{
-      text-align:center;
       font-size:26px;
       font-weight:700;
       color:#2563eb;
-      margin-bottom:16px;
+      margin-bottom:20px;
     }
 
-    ul{padding-left:18px;color:#374151}
+    .cols{
+      display:flex;
+      flex-direction:column;
+      gap:30px;
+      align-items:center;
+    }
+
+    ul{ padding-left:18px; color:var(--muted); }
 
     .action-pill{
       display:inline-block;
-      margin-top:8px;
-      padding:10px 16px;
+      padding:10px 18px;
       border-radius:999px;
-      color:white;
-      background:var(--success);
       font-weight:700;
+      color:white;
+      margin-top:10px;
+    }
+
+    footer{
+      margin-top:28px;
+      font-size:13px;
+      color:var(--muted);
     }
   </style>
 </head>
 
 <body>
-<div class="card">
 
+<div class="card">
   <h1>ResumeFox AI 🦊</h1>
   <div class="subtitle">Smart Resume-to-Job Matching Tool</div>
 
-  <label class="btn btn-upload">
-    <input id="fileResume" type="file" accept=".txt">
-    Upload Resume
-  </label>
-  <div id="resumeStatus" class="small"></div>
+  <!-- Upload -->
+  <div class="upload-row" id="uploadSection">
+    <label class="btn btn-upload">
+      <input id="fileResume" type="file" accept=".txt">
+      Upload Resume
+    </label>
+    <div id="resumeStatus" class="small"></div>
 
-  <label class="btn btn-upload">
-    <input id="fileJD" type="file" accept=".txt">
-    Upload Job Description
-  </label>
-  <div id="jdStatus" class="small"></div>
+    <label class="btn btn-upload">
+      <input id="fileJD" type="file" accept=".txt">
+      Upload Job Description
+    </label>
+    <div id="jdStatus" class="small"></div>
 
-  <button id="analyzeBtn" class="btn btn-cta">Analyze Match</button>
-  <div class="small">Upload small .txt files for demo</div>
+    <button id="analyzeBtn" class="btn btn-cta">Analyze Match</button>
+    <div class="small">Upload small .txt files for demo</div>
+  </div>
 
+  <!-- Processing -->
   <div id="processing" class="processing">
-    <p><b>Analyzing Resume…</b></p>
+    <div class="spinner"></div>
+    <div style="font-weight:700;margin-top:10px">Analyzing Resume…</div>
+    <div class="small">Fox is reviewing your resume…</div>
   </div>
 
+  <!-- Results -->
   <div id="results" class="results">
-    <div class="score" id="scoreText"></div>
+    <div class="score" id="scoreText">Match Score: 0 / 100</div>
 
-    <h3>Strengths</h3>
-    <ul id="strengthsList"></ul>
+    <div class="cols">
+      <div>
+        <b>Strengths</b>
+        <ul id="strengthsList"></ul>
+      </div>
 
-    <h3>Weaknesses</h3>
-    <ul id="weaknessesList"></ul>
+      <div>
+        <b>Weaknesses</b>
+        <ul id="weaknessesList"></ul>
+      </div>
+    </div>
 
-    <h3>Recommended Action</h3>
-    <div id="actionPill" class="action-pill"></div>
+    <div style="margin-top:20px">
+      <b>Recommended Action</b><br>
+      <span id="actionPill" class="action-pill">Review</span>
+    </div>
 
-    <br><br>
-    <button id="again" class="btn btn-upload">Analyze Another</button>
+    <div style="margin-top:20px">
+      <button id="again" class="btn btn-upload">Analyze Another</button>
+    </div>
   </div>
 
+  <footer>Powered by ResumeFox AI — Demo Version</footer>
 </div>
 
 <script>
-const fileResume = document.getElementById("fileResume");
-const fileJD = document.getElementById("fileJD");
-const resumeStatus = document.getElementById("resumeStatus");
-const jdStatus = document.getElementById("jdStatus");
+  const fileResume = document.getElementById("fileResume");
+  const fileJD = document.getElementById("fileJD");
+  const resumeStatus = document.getElementById("resumeStatus");
+  const jdStatus = document.getElementById("jdStatus");
 
-const processing = document.getElementById("processing");
-const results = document.getElementById("results");
-const analyzeBtn = document.getElementById("analyzeBtn");
+  const uploadSection = document.getElementById("uploadSection");
+  const processing = document.getElementById("processing");
+  const results = document.getElementById("results");
 
-let resumeText = "";
-let jdText = "";
+  let resumeText = "";
+  let jdText = "";
 
-function readFile(file){
-  return new Promise((res)=>{
-    const r = new FileReader();
-    r.onload = () => res(r.result);
-    r.readAsText(file);
-  });
-}
-
-fileResume.onchange = async e => {
-  resumeText = await readFile(e.target.files[0]);
-  resumeStatus.textContent = "Resume Uploaded ✔";
-};
-
-fileJD.onchange = async e => {
-  jdText = await readFile(e.target.files[0]);
-  jdStatus.textContent = "Job Description Uploaded ✔";
-};
-
-analyzeBtn.onclick = async () => {
-  if(!resumeText || !jdText){
-    alert("Upload both resume and JD first!");
-    return;
+  function resetUI(){
+    processing.style.display = "none";
+    results.style.display = "none";
   }
 
-  processing.style.display = "block";
-  results.style.display = "none";
-
-  try {
-    const res = await fetch(
-      "https://ankitasuryawanshi400.app.n8n.cloud/webhook/resumefox-compare",
-      {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ resume: resumeText, jd: jdText })
-      }
-    );
-
-    const data = await res.json();
-
-    // 👇 THIS IS THE IMPORTANT FIX
-    let raw = data.candidates[0].content.parts[0].text;
-
-    raw = raw.replace(/```json|```/g,"").trim();
-    const ai = JSON.parse(raw);
-
-    showResults(ai);
-
-  } catch(err){
-    console.error(err);
-    alert("Backend error — check n8n workflow");
+  function showProcessing(){
+    resetUI();
+    processing.style.display = "block";
   }
-};
 
-function showResults(ai){
-  processing.style.display="none";
-  results.style.display="block";
+  function showResultsUI(){
+    resetUI();
+    results.style.display = "block";
+  }
 
-  document.getElementById("scoreText").textContent =
-    `Match Score: ${ai.score} / 100`;
+  function readFile(file){
+    return new Promise((resolve)=>{
+      const r = new FileReader();
+      r.onload = ()=>resolve(r.result);
+      r.readAsText(file);
+    });
+  }
 
-  const s = document.getElementById("strengthsList");
-  const w = document.getElementById("weaknessesList");
-  s.innerHTML = ""; w.innerHTML = "";
+  fileResume.onchange = async e => {
+    resumeText = await readFile(e.target.files[0]);
+    resumeStatus.textContent = "Resume Uploaded ✔";
+  };
 
-  ai.strengths.forEach(x=>{
-    const li=document.createElement("li");
-    li.textContent=x;
-    s.appendChild(li);
-  });
+  fileJD.onchange = async e => {
+    jdText = await readFile(e.target.files[0]);
+    jdStatus.textContent = "Job Description Uploaded ✔";
+  };
 
-  ai.weaknesses.forEach(x=>{
-    const li=document.createElement("li");
-    li.textContent=x;
-    w.appendChild(li);
-  });
+  document.getElementById("analyzeBtn").onclick = async () => {
+    if(!resumeText || !jdText){
+      alert("Upload both files first");
+      return;
+    }
 
-  const pill=document.getElementById("actionPill");
-  pill.textContent = ai.recommended_action;
-  pill.style.background =
-    ai.recommended_action==="Interview" ? "#16a34a" : "#f59e0b";
-}
+    showProcessing();
 
-document.getElementById("again").onclick = ()=>{
-  results.style.display="none";
-  resumeText=""; jdText="";
-  fileResume.value=""; fileJD.value="";
-  resumeStatus.textContent=""; jdStatus.textContent="";
-};
+    try{
+      const res = await fetch(
+        "https://ankitasuryawanshi400.app.n8n.cloud/webhook/resumefox-compare",
+        {
+          method:"POST",
+          headers:{ "Content-Type":"application/json" },
+          body:JSON.stringify({ resume:resumeText, jd:jdText })
+        }
+      );
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+      let score = 0, strengths=[], weaknesses=[], action="Review";
+
+      try{
+        const json = JSON.parse(text.replace(/```json|```/g,""));
+        score = json.score || 0;
+        strengths = json.strengths || [];
+        weaknesses = json.weaknesses || [];
+        action = json.recommended_action || "Review";
+      }catch{}
+
+      document.getElementById("scoreText").textContent = `Match Score: ${score} / 100`;
+
+      const sList = document.getElementById("strengthsList");
+      const wList = document.getElementById("weaknessesList");
+      sList.innerHTML = strengths.map(s=>`<li>${s}</li>`).join("") || "<li>—</li>";
+      wList.innerHTML = weaknesses.map(w=>`<li>${w}</li>`).join("") || "<li>—</li>";
+
+      const pill = document.getElementById("actionPill");
+      pill.textContent = action;
+      pill.style.background = action==="Interview" ? "#16a34a" : "#f59e0b";
+
+      showResultsUI();
+
+    }catch{
+      alert("Backend error — check n8n");
+      resetUI();
+    }
+  };
+
+  document.getElementById("again").onclick = ()=>{
+    resetUI();
+    resumeText = jdText = "";
+    resumeStatus.textContent = "";
+    jdStatus.textContent = "";
+    fileResume.value = "";
+    fileJD.value = "";
+  };
 </script>
 
 </body>
